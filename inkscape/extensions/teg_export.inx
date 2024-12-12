@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<inkscape-extension
+    xmlns="http://www.inkscape.org/namespace/inkscape/extension"
+>
+    <name>TEG: Generate map</name>
+    <id>org.inkscape.teg.export</id>
+
+    <param name="tab" type="notebook">
+        <page name="Options" gui-text="Options">
+            <param
+                name="layer_file"
+                type="path"
+                mode="file"
+                gui-text="Layer-Datei"
+                description="Datei mit den Namen der Layer, die bearbeitet werden sollen."
+            />
+            <param
+                name="output_folder"
+                type="path"
+                mode="folder"
+                gui-text="Zielordner"
+                description="Ordner, in dem die exportierten PNG-Dateien gespeichert werden."
+            />
+        </page>
+        <page name="Help" gui-text="Help">
+            <label xml:space="preserve">
+Layer file: A text file containing the names of the layers to be processed.
+Output folder: The target folder where the exported PNG files will be saved.
+            </label>
+         </page>
+    </param>
+
+    <effect>
+        <effects-menu>
+            <submenu name="Custom Export" />
+        </effects-menu>
+    </effect>
+
+    <script>
+        <command
+            reldir="extensions"
+            interpreter="python"
+        >teg_export.py</command>
+    </script>
+</inkscape-extension>
