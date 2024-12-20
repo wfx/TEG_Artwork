@@ -11,21 +11,33 @@
                 name="layer_file"
                 type="path"
                 mode="file"
-                gui-text="Layer-Datei"
-                description="Datei mit den Namen der Layer, die bearbeitet werden sollen."
+                gui-text="Layer file"
+                description="A text file containing the names of the layers to process, one layer per line."
             />
             <param
                 name="output_folder"
                 type="path"
                 mode="folder"
-                gui-text="Zielordner"
-                description="Ordner, in dem die exportierten PNG-Dateien gespeichert werden."
+                gui-text="Output folderr"
+                description="The target folder where the exported PNG files will be saved."
             />
         </page>
         <page name="Help" gui-text="Help">
             <label xml:space="preserve">
-Layer file: A text file containing the names of the layers to be processed.
-Output folder: The target folder where the exported PNG files will be saved.
+This extension allows you to process specific layers from an SVG file, apply clipping masks, and export the results as PNG files.
+
+Parameters:
+- Layer File: A text file containing the names of the layers to process, one layer per line.
+- Output Folder: The target folder where the exported PNG files will be saved.
+
+Workflow:
+1. The extension reads the layer names from the layer file.
+2. It applies a clipping mask to each specified layer.
+3. The resulting PNG file is exported to the output folder.
+
+Make sure that:
+- The layer names in the file match exactly with the layer (label) names in the SVG file.
+- A clipping object labeled "Clip_Image" exists in your SVG.
             </label>
          </page>
     </param>

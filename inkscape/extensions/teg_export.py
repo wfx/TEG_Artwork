@@ -14,14 +14,11 @@ class TEGGenerateMap(inkex.Effect):
         pars.add_argument("--tab", type=str, help="UI Tab argument")
 
     def effect(self):
-        self.input_file = self.document_path()
-        debug(f"Use document: {self.input_file}")
-
+        input_file = self.document_path()
         layer_file = self.options.layer_file
         output_folder = self.options.output_folder
 
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        debug(f"Use document: {input_file}")
 
         if not os.path.exists(layer_file):
             debug(f"Layer file {layer_file} not found!")
@@ -34,6 +31,10 @@ class TEGGenerateMap(inkex.Effect):
             inkex.errormsg(f"Failed to load layer file '{layer_file}': {e}")
             return
 
+        if not os.path.exists(output_folder):
+            debug(f"Create folder: {output_folder}")
+            os.makedirs(output_folder)
+
         for layer_path in layers:
             debug(f"Processing layer path: {layer_path}")
             try:
@@ -42,19 +43,63 @@ class TEGGenerateMap(inkex.Effect):
                     debug(f"Layer not found for path: {layer_path}")
                     continue
 
+                # TODO: Change hardcoded label for clipping image
                 clip_image = self.find_clip_image_by_label("Clip_Image")
                 if clip_image is None:
                     debug("Clip image not found. Available labels:")
                     self.debug_all_labels()
-                    continue
+                    # Stop, none image, none clipping.
 
-                self.apply_clipping(layer, clip_image)
                 output_file = os.path.join(output_folder, f"{layer_path.replace('/', '_')}.png")
-                self.export_to_png(clip_image, output_file)
+                self.apply_clip_and_export(input_file, layer, clip_image, output_file)
 
-                self.remove_clipping(clip_image)
             except Exception as e:
                 inkex.errormsg(f"Error processing layer '{layer_path}': {e}")
+
+    def apply_clip_and_export(self, input_file, layer, clip_image, output_file):
+        try:
+            layer_id = layer.get("id")
+            clip_image_id = clip_image.get("id")
+
+            if not layer_id or not clip_image_id:
+                debug(f"Invalid IDs: layer_id={layer_id}, clip_image_id={clip_image_id}")
+                return
+
+            debug(f"Using input file for subprocess: {self.input_file}")
+            debug(f"Clip image visibility: {clip_image.get('style')}")
+            debug(f"Layer visibility: {layer.get('style')}")
+            debug(f"Clearing selection and applying clipping with IDs: layer_id={layer_id}, clip_image_id={clip_image_id}")
+
+            action_clip = (
+                f"select-clear;"
+                f"select-by-id:{clip_image_id};"
+                f"select-by-id:{layer_id};"
+                "object-set-clip"
+            )
+            action_export = (
+                f"select-clear;select-by-id:{clip_image_id};"
+                "export-type:png;"
+                "export-area-drawing;"
+                f"export-filename:{output_file};"
+                "export-do"
+            )
+            action_release_clip = (
+                f"select-clear;select-by-id:{clip_image_id};"
+                "object-release-clip"
+            )
+            actions = f"{action_clip};{action_export};{action_release_clip}"
+            result = subprocess.run(
+                ["inkscape", f"{input_file}", "--actions", f"{actions}"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            debug(f"Subprocess success: {result.stdout}")
+        except subprocess.CalledProcessError as e:
+            debug(f"Error during subprocess call: {e.stderr}")
+            raise
+
 
     def find_layer_by_path(self, path):
         groups = path.split("/")
@@ -101,58 +146,6 @@ class TEGGenerateMap(inkex.Effect):
             if label:
                 debug(f"Found label: {label}")
 
-    def apply_clipping(self, layer, clip_image):
-        try:
-            layer_id = layer.get("id")
-            clip_image_id = clip_image.get("id")
-
-            if not layer_id or not clip_image_id:
-                debug(f"Invalid IDs: layer_id={layer_id}, clip_image_id={clip_image_id}")
-                return
-            debug(f"Using input file for subprocess: {self.input_file}")
-            debug(f"Clip image visibility: {clip_image.get('style')}")
-            debug(f"Layer visibility: {layer.get('style')}")
-            debug(f"Clearing selection and applying clipping with IDs: layer_id={layer_id}, clip_image_id={clip_image_id}")
-
-            subprocess.run([
-                "inkscape",
-                "--actions",
-                f"select-clear;select-by-id:{clip_image_id};select-by-id:{layer_id};object-set-clip",
-                f"{self.input_file}"
-            ], check=True, stderr=subprocess.PIPE)
-            debug(f"Clipping applied to layer {layer_id}")
-        except subprocess.CalledProcessError as e:
-            debug(f"Error during clipping: {e.stderr}")
-
-    def remove_clipping(self, clip_image):
-        try:
-            clip_image_id = clip_image.get("id")
-            if not clip_image_id:
-                debug(f"Invalid layer ID for unclipping: {clip_image_id}")
-                return
-
-            subprocess.run([
-                "inkscape",
-                "--actions",
-                f"select-clear;select-by-id:{clip_image_id};object-release-clip",
-                f"{self.input_file}"
-            ], check=True)
-            debug(f"Clipping removed from layer {clip_image_id}")
-        except subprocess.CalledProcessError as e:
-            debug(f"Error during clipping removal: {e.stderr}")
-
-    def export_to_png(self, clip_image, output_file):
-        clip_image_id = clip_image.get('id')
-        try:
-            subprocess.run([
-                "inkscape",
-                "--actions",
-                f"select-clear;select-by-id:{clip_image_id};export-type:png;export-area-drawing;export-filename:{output_file};export-do",
-                f"{self.input_file}"
-            ], check=True)
-            debug(f"Exporting layer ID: {clip_image_id} to file: {output_file}")
-        except subprocess.CalledProcessError as e:
-            debug(f"Error during PNG export: {e.stderr}")
 
 if __name__ == '__main__':
     TEGGenerateMap().run()
