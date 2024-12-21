@@ -1,4 +1,0 @@
-TEG_Map/Oceania/Sumatra
-TEG_Map/Oceania/Australia
-TEG_Map/Oceania/Borneo
-TEG_Map/Oceania/Java
