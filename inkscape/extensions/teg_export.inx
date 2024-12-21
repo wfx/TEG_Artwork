@@ -18,7 +18,7 @@
                 name="output_folder"
                 type="path"
                 mode="folder"
-                gui-text="Output folderr"
+                gui-text="Output folder"
                 description="The target folder where the exported PNG files will be saved."
             />
         </page>
@@ -37,7 +37,9 @@ Workflow:
 
 Make sure that:
 - The layer names in the file match exactly with the layer (label) names in the SVG file.
+- All (countries) layer a hode
 - A clipping object labeled "Clip_Image" exists in your SVG.
+- The "Clip_Image" is under all (country) layers.
             </label>
          </page>
     </param>
