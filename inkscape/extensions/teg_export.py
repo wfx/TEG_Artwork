@@ -3,6 +3,7 @@ import subprocess
 import inkex
 import re
 from inkex.utils import Y, debug
+from pydoc import parentname
 
 class TEGGenerateMap(inkex.Effect):
     def __init__(self):
@@ -36,6 +37,12 @@ class TEGGenerateMap(inkex.Effect):
             debug(f"Create folder: {output_folder}")
             os.makedirs(output_folder)
 
+        # TODO: Change hardcoded label for clipping image
+        clip_image = self.find_clip_image_by_label("Clip_Image")
+        if clip_image is None:
+            debug("Clip image not found. Available labels:")
+            self.debug_all_labels()
+
         for layer_path in layers:
             debug(f"Processing layer path: {layer_path}")
             try:
@@ -46,25 +53,18 @@ class TEGGenerateMap(inkex.Effect):
 
                 continent_name = layer_path.rsplit("/", 2)[-2]
                 country_name = layer_path.rsplit("/", 1)[-1]
-                file_name = f"{continent_name}_{country_name}.png"
+                file_name = f"{continent_name}_{country_name}"
                 debug(f"Filename: {file_name}")
                 # Note layer position
                 pos_x, pos_y, army_x, army_y = self.element_position(layer)
                 if pos_x is not None and pos_y is not None:
                     with open(f"{output_folder}/positions.txt", "a") as file:
-                        file.write(f'<country name="{country_name}" file="{file_name}" pos_x="{pos_x}" pos_y="{pos_y}" army_x="{army_x}" army_y="{army_y}></country>"\n')
+                        file.write(f'<country name="{country_name}" file="{file_name}" pos_x="{pos_x}" pos_y="{pos_y}" army_x="{army_x}" army_y="{army_y}"/>\n')
                 else:
                     debug(f"Skipping position record for layer: {layer_path}. Position unknown.")
 
-                # TODO: Change hardcoded label for clipping image
-                clip_image = self.find_clip_image_by_label("Clip_Image")
-                if clip_image is None:
-                    debug("Clip image not found. Available labels:")
-                    self.debug_all_labels()
-                    # Stop, none image, none clipping.
-
                 # Clip it
-                output_file = os.path.join(output_folder, file_name)
+                output_file = os.path.join(output_folder, f"{file_name}.png")
                 self.apply_clip_and_export(input_file, layer, clip_image, output_file)
 
             except Exception as e:
@@ -141,6 +141,7 @@ class TEGGenerateMap(inkex.Effect):
                 return child
         return None
 
+    # TODO: Use this a stemplate for Root_of_map/Continent
     def find_clip_image_by_label(self, label):
         inkscape_ns = "{http://www.inkscape.org/namespaces/inkscape}"
         for element in self.svg.getiterator():
@@ -154,7 +155,7 @@ class TEGGenerateMap(inkex.Effect):
         return None
 
     def element_position(self, element):
-        # Ensure the layer is valid and has an ID
+        # Ensure the element is valid and has an ID
         element_id = element.get("id")
         if element is None:
             debug(f"No matching element with ID '{element_id}' found")
