@@ -47,10 +47,10 @@ class TEGGenerateMap(inkex.Effect):
                 file_name = layer_path.rsplit("/", 1)[-1]
 
                 # Note layer position
-                pos_x, pos_y = self.layer_position(layer)
+                pos_x, pos_y = self.element_position(layer)
                 if pos_x is not None and pos_y is not None:
                     with open(f"{output_folder}/positions.txt", "a") as file:
-                        file.write(f"{file_name}: x {pos_x}, y {pos_y}\n")
+                        file.write(f'<country name="{file_name}" file="{file_name}" pos_x="{pos_x}" pos_y="{pos_y}" army_x="{army_x}" army_y="{qrmy_y}></country>"\n')
                 else:
                     debug(f"Skipping position record for layer: {layer_path}. Position unknown.")
 
@@ -151,19 +151,19 @@ class TEGGenerateMap(inkex.Effect):
         debug(f"No matching clip image found for label: {label}")
         return None
 
-    def layer_position(self, layer):
+    def element_position(self, element):
         # Ensure the layer is valid and has an ID
-        layer_id = layer.get("id")
-        if layer is None:
-            debug(f"No matching layer with ID '{layer_id}' found")
-            return None, None  # Return None if the layer isn't found
+        element_id = element.get("id")
+        if element is None:
+            debug(f"No matching element with ID '{element_id}' found")
+            return None, None  # Return None if the element isn't found
 
         # Retrieve the bounding box attributes
-        bounding_box = layer.bounding_box()
+        bounding_box = element.bounding_box()
         if bounding_box:
-            return bounding_box.left, bounding_box.top
+            return round(bounding_box.left), round(bounding_box.top)
         else:
-            debug(f"No attributes found: {layer}. Assuming position (0, 0).")
+            debug(f"No attributes found: {element}. Assuming position (0, 0).")
             return 0, 0
 
 
