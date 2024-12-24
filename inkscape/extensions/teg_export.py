@@ -53,7 +53,7 @@ class TEGGenerateMap(inkex.Effect):
 
                 continent_name = layer_path.rsplit("/", 2)[-2]
                 country_name = layer_path.rsplit("/", 1)[-1]
-                file_name = f"{continent_name}_{country_name}"
+                file_name = f"{continent_name}_{country_name}.png"
                 debug(f"Filename: {file_name}")
                 # Note layer position
                 pos_x, pos_y, army_x, army_y = self.element_position(layer)
@@ -64,7 +64,7 @@ class TEGGenerateMap(inkex.Effect):
                     debug(f"Skipping position record for layer: {layer_path}. Position unknown.")
 
                 # Clip it
-                output_file = os.path.join(output_folder, f"{file_name}.png")
+                output_file = os.path.join(output_folder, file_name)
                 self.apply_clip_and_export(input_file, layer, clip_image, output_file)
 
             except Exception as e:
@@ -164,7 +164,7 @@ class TEGGenerateMap(inkex.Effect):
         # Retrieve the bounding box attributes
         bounding_box = element.bounding_box()
         if bounding_box:
-            return round(bounding_box.left), round(bounding_box.top), round(bounding_box.center_x), round(bounding_box.center_y)
+            return round(bounding_box.left), round(bounding_box.top), 0, 0
         else:
             debug(f"No attributes found: {element}. Assuming position (0, 0).")
             return 0, 0, 0, 0
